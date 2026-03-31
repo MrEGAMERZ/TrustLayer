@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function DocumentUpload({ onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
@@ -24,10 +25,14 @@ export default function DocumentUpload({ onUploadSuccess }) {
         }
       });
       if (resp.data.status === "success") {
+        toast.success(`✅ ${file.name} securely ingested and vectorized into the index!`);
         onUploadSuccess(file.name);
+      } else {
+        toast.error("Failed to parse file: " + resp.data.message);
       }
     } catch (err) {
       console.error(err);
+      toast.error("Network Error: Could not connect to TrustLayer backend");
       setError("Failed to upload document.");
     } finally {
       setUploading(false);

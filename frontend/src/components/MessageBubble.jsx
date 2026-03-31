@@ -12,8 +12,19 @@ export default function MessageBubble({ message }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end mb-4">
-        <div className="bg-blue-600 text-white rounded-xl p-4 max-w-2xl shadow">
-          <p>{message.text}</p>
+        <div className="bg-[#0f172a] text-white rounded-2xl rounded-tr-sm p-4 max-w-[80%] shadow-md">
+          <p className="whitespace-pre-wrap">{message.text}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // System Event Bubble
+  if (message.role === "system") {
+    return (
+      <div className="flex justify-center mb-6">
+        <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 shadow-sm w-full max-w-2xl text-center font-medium">
+          <p>{message.answer}</p>
         </div>
       </div>
     );

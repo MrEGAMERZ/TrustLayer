@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import MessageBubble from "./MessageBubble";
 import DocumentUpload from "./DocumentUpload";
+import toast from "react-hot-toast";
 
 export default function ChatWindow() {
   const [messages, setMessages] = useState([]);
@@ -37,15 +38,20 @@ export default function ChatWindow() {
         question: query
       });
 
+      if (resp.data.is_hallucinated) {
+        toast('⚠️ Low confidence answer detected', { icon: '🔴', style: { background: '#fef2f2' } });
+      }
+
       setMessages((prev) => [
         ...prev,
         { role: "assistant", ...resp.data }
       ]);
     } catch (err) {
       console.error(err);
+      toast.error('Network Error: Could not reach TrustLayer API');
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", answer: "Error: The backend could not process this request.", is_hallucinated: false, confidence: null, citations: [] }
+        { role: "assistant", answer: "Error: The backend could not process this request.", is_hallucinated: true, confidence: 0, citations: [] }
       ]);
     } finally {
       setIsLoading(false);
