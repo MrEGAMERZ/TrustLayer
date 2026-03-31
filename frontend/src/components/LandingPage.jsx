@@ -1,75 +1,74 @@
 export default function LandingPage({ onEnter }) {
   return (
-    <div className="h-screen w-full bg-[#f8fafc] flex flex-col justify-center items-center p-6 relative overflow-hidden">
+    <div className="h-screen w-full flex flex-col justify-center items-center relative z-10 px-4">
       
-      {/* Background Decorators */}
-      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-br from-blue-600/10 to-purple-600/10 blur-3xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-full h-96 bg-gradient-to-tl from-indigo-600/10 to-blue-400/10 blur-3xl rounded-full translate-x-1/2 translate-y-1/2"></div>
-      
-      <div className="z-10 max-w-4xl w-full grid md:grid-cols-2 gap-12 items-center bg-white/60 backdrop-blur-md border border-white p-8 md:p-12 rounded-3xl shadow-xl">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] -z-10 mix-blend-screen pointer-events-none"></div>
+
+      <div className="max-w-4xl w-full flex flex-col md:flex-row gap-12 items-center 
+                      bg-white/5 backdrop-blur-2xl border border-white/10 
+                      p-10 md:p-14 rounded-[2.5rem] shadow-2xl overflow-hidden relative">
         
-        {/* Left Col - Pitch */}
-        <div className="flex flex-col items-start text-left">
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-3xl">🛡️</span>
-            <span className="text-xl font-bold tracking-tight text-gray-900">TrustLayer <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded ml-2 font-semibold">v1.0.0-beta</span></span>
+        {/* Subtle noise texture or gradient line on top */}
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        <div className="absolute bottom-0 right-0 w-[1px] h-full bg-gradient-to-t from-transparent via-white/10 to-transparent"></div>
+
+        {/* Left Col - Typography & Brand */}
+        <div className="flex-1 flex flex-col items-start text-left z-20">
+          <div className="flex items-center gap-2 mb-8">
+            <span className="text-2xl opacity-80">🛡️</span>
+            <span className="text-lg font-medium tracking-[0.2em] text-gray-300 uppercase">TrustLayer</span>
+            <span className="text-[10px] bg-white/10 text-white/70 px-2 py-0.5 rounded-sm ml-2 font-mono border border-white/5">v1.1</span>
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
-            Enterprise Knowledge.<br/>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Verified.</span>
+          <h1 className="text-5xl md:text-6xl font-light text-white leading-[1.1] mb-6 tracking-tight">
+            Information.<br/>
+            <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">Verified.</span>
           </h1>
           
-          <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-            The only enterprise AI copilot that mathematically proves every answer it gives. Upload your sensitive policies, contracts, and manuals, and get answers grounded in exact-sentence citation.
+          <p className="text-[15px] font-light text-gray-400 mb-10 leading-relaxed max-w-sm">
+            Not another chatbot. The first mathematically proven truth engine. We map enterprise context through high-dimensional semantic vectors to generate mathematically grounded answers.
           </p>
           
           <button 
             onClick={onEnter}
-            className="group flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="group relative flex items-center justify-center gap-3 bg-white/10 hover:bg-white/[0.15] text-white px-8 py-3.5 rounded-full font-medium transition-all duration-300 border border-white/10 hover:border-white/20 overflow-hidden"
           >
-            Authenticate & Access Matrix <span className="group-hover:translate-x-1 transition-transform">→</span>
+            <div className="absolute inset-0 w-1/4 h-full bg-white/10 skew-x-[45deg] group-hover:translate-x-[400%] transition-transform duration-700 ease-out"></div>
+            Authenticate Session <span className="opacity-50 group-hover:translate-x-1 group-hover:opacity-100 transition-all font-mono">→</span>
           </button>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200 w-full">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Trusted Architecture Stack</p>
-            <div className="flex gap-4 mt-3 text-sm text-gray-500 font-semibold items-center">
-               <span>FastAPI</span>
-               <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-               <span>React</span>
-               <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-               <span>FAISS Vectors</span>
-               <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-               <span>Gemini Flash</span>
-            </div>
-          </div>
         </div>
 
         {/* Right Col - Visual Tech */}
-        <div className="relative hidden md:flex justify-center items-center h-full">
-           <div className="bg-white border rounded-2xl shadow-sm p-5 w-full max-w-sm flex flex-col gap-3 rotate-2 hover:rotate-0 transition-all duration-500">
-             <div className="flex justify-between items-center mb-2">
-                <div className="h-3 w-3 rounded-full bg-red-400"></div>
-                <span className="text-xs text-gray-400 font-mono">system.diagnostic</span>
-             </div>
-             <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-             <div className="h-4 bg-gray-100 rounded w-full"></div>
-             <div className="h-4 bg-gray-100 rounded w-5/6 mb-3"></div>
-             <div className="bg-green-50 border border-green-200 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-xs font-semibold text-green-700">Cosine Confidence</span>
-                <span className="text-xs font-bold text-green-800">94.2%</span>
-             </div>
-             <div className="bg-gray-50 border p-3 rounded-lg flex flex-col gap-1">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Citation Triggered</span>
-                <span className="text-xs text-gray-700 italic border-l-2 border-blue-400 pl-2">"Found in HR_Policy_v4.pdf pg 12"</span>
-             </div>
+        <div className="flex-1 w-full flex flex-col gap-4 relative z-20">
+           <div className="flex items-center gap-3 text-xs tracking-widest text-gray-500 uppercase font-medium mb-2 pl-2 border-l border-white/20">
+              System Architecture
+           </div>
+
+           <div className="bg-black/40 border border-white/[0.08] backdrop-blur-xl rounded-2xl p-5 hover:bg-white/[0.04] transition-colors">
+              <div className="flex justify-between items-center mb-1">
+                 <span className="text-sm font-medium text-gray-200">FAISS Indexing</span>
+                 <span className="w-2 h-2 rounded-full bg-green-500/50 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+              </div>
+              <p className="text-xs text-gray-500">L2 Normalized Vector Space</p>
+           </div>
+           
+           <div className="bg-black/40 border border-white/[0.08] backdrop-blur-xl rounded-2xl p-5 hover:bg-white/[0.04] transition-colors translate-x-4">
+              <div className="flex justify-between items-center mb-1">
+                 <span className="text-sm font-medium text-gray-200">Hallucination Guardrail</span>
+                 <span className="w-2 h-2 rounded-full bg-green-500/50 shadow-[0_0_8px_rgba(34,197,94,0.5)] animate-pulse"></span>
+              </div>
+              <p className="text-xs text-gray-500">Cosine Similarity Threshold: 35%</p>
+           </div>
+
+           <div className="bg-black/40 border border-white/[0.08] backdrop-blur-xl rounded-2xl p-5 hover:bg-white/[0.04] transition-colors max-w-[85%]">
+              <div className="flex justify-between items-center mb-1">
+                 <span className="text-sm font-medium text-gray-200">Citation Engine</span>
+                 <span className="w-2 h-2 rounded-full bg-green-500/50 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+              </div>
+              <p className="text-xs text-gray-500">Exact sentence mapping & validation</p>
            </div>
         </div>
 
-      </div>
-
-      <div className="absolute bottom-6 text-center text-xs text-gray-400">
-        © 2026 TrustLayer by Team InclusionX · Built for Mini SIH 2026
       </div>
     </div>
   );

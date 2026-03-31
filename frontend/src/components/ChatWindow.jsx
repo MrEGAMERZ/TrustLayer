@@ -66,17 +66,17 @@ export default function ChatWindow() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 font-sans">
+    <div className="flex flex-col h-screen bg-transparent font-sans">
       <DocumentUpload onUploadSuccess={handleUploadSuccess} />
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-4">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-sm text-center">
-              <span className="text-4xl block mb-4">🏛️</span>
-              <h2 className="text-xl text-gray-800 font-semibold mb-2">Welcome to TrustLayer</h2>
-              <p className="text-sm">Please upload an enterprise document (PDF) at the top, and ask any contextual question below.</p>
+            <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 max-w-sm text-center shadow-[0_0_30px_rgba(255,255,255,0.02)]">
+              <span className="text-4xl block mb-4 opacity-50">🏛️</span>
+              <h2 className="text-xl text-gray-200 font-light tracking-wide mb-2 uppercase">Welcome to TrustLayer</h2>
+              <p className="text-sm font-light text-gray-400">Initialize the matrix by uploading an enterprise document (PDF) at the top, and input any contextual query below.</p>
             </div>
           </div>
         )}
@@ -85,8 +85,8 @@ export default function ChatWindow() {
           {messages.map((m, i) => (
              m.role === "user" ? (
                <div key={i} className="flex justify-end mb-4">
-                  <div className="bg-[#0f172a] text-white rounded-2xl rounded-tr-sm p-4 max-w-[80%] shadow-md">
-                    <p className="whitespace-pre-wrap">{m.text}</p>
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 text-gray-200 rounded-2xl rounded-tr-sm p-4 max-w-[80%] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                    <p className="whitespace-pre-wrap font-light">{m.text}</p>
                   </div>
                </div>
              ) : (
@@ -95,11 +95,9 @@ export default function ChatWindow() {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-white border text-gray-500 rounded-xl rounded-tl-sm px-4 py-3 shadow-sm inline-flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce"></span>
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce delay-75"></span>
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce delay-150"></span>
-                <span className="text-sm font-medium">Analyzing vector chunks...</span>
+              <div className="bg-black/40 border border-white/10 backdrop-blur-md text-cyan-400 rounded-xl rounded-tl-sm px-4 py-3 shadow-md inline-flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse"></span>
+                <span className="text-sm font-medium tracking-wide">Synthesizing vector paths...</span>
               </div>
             </div>
           )}
@@ -108,22 +106,22 @@ export default function ChatWindow() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t border-gray-200 p-4 sticky bottom-0 z-10">
-        <div className="max-w-4xl mx-auto relative flex items-end shadow-lg rounded-2xl bg-white border outline-2 outline-transparent focus-within:outline-blue-500 transition-all">
+      <div className="bg-black/20 backdrop-blur-xl border-t border-white/10 p-4 sticky bottom-0 z-10 w-full">
+        <div className="max-w-4xl mx-auto relative flex items-end shadow-2xl rounded-2xl bg-white/[0.03] border border-white/10 focus-within:border-cyan-500/50 transition-all focus-within:shadow-[0_0_20px_rgba(6,182,212,0.15)]">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything about your trusted enterprise context..."
-            className="w-full resize-none bg-transparent p-4 pr-16 text-gray-800 focus:outline-none min-h-[56px] max-h-48 overflow-y-auto"
+            placeholder="Query your trusted enterprise context..."
+            className="w-full resize-none bg-transparent p-4 pr-16 text-gray-200 font-light placeholder-gray-600 focus:outline-none min-h-[56px] max-h-48 overflow-y-auto"
             rows="1"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 bottom-2 p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-2 bottom-2 p-2 bg-white/10 text-white rounded-xl hover:bg-white/20 disabled:opacity-20 disabled:cursor-not-allowed transition-all border border-transparent hover:border-white/20"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12Zm0 0h7.5" />
             </svg>
           </button>

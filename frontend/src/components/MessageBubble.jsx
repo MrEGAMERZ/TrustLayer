@@ -12,8 +12,8 @@ export default function MessageBubble({ message }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end mb-4">
-        <div className="bg-[#0f172a] text-white rounded-2xl rounded-tr-sm p-4 max-w-[80%] shadow-md">
-          <p className="whitespace-pre-wrap">{message.text}</p>
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 text-gray-200 rounded-2xl rounded-tr-sm p-4 max-w-[80%] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+          <p className="whitespace-pre-wrap font-light">{message.text}</p>
         </div>
       </div>
     );
@@ -23,7 +23,7 @@ export default function MessageBubble({ message }) {
   if (message.role === "system") {
     return (
       <div className="flex justify-center mb-6">
-        <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 shadow-sm w-full max-w-2xl text-center font-medium">
+        <div className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 backdrop-blur-md rounded-xl p-4 shadow-[0_0_15px_rgba(6,182,212,0.1)] w-full max-w-2xl text-center font-medium font-mono text-sm">
           <p>{message.answer}</p>
         </div>
       </div>
@@ -33,30 +33,36 @@ export default function MessageBubble({ message }) {
   // AI Response Bubble
   const confidencePct = message.confidence !== null ? Math.round(message.confidence * 100) : 0;
   const barColor =
-    confidencePct >= 70 ? "#22c55e" :
-    confidencePct >= 40 ? "#f59e0b" : "#ef4444";
+    confidencePct >= 70 ? "#06b6d4" : // cyan
+    confidencePct >= 40 ? "#f59e0b" : "#ef4444"; // orange, red
 
   return (
-    <div className="flex justify-start mb-6">
-      <div className="bg-white border shadow-sm rounded-xl p-5 max-w-2xl w-full hover:shadow-md transition-shadow">
+    <div className="flex justify-start mb-6 w-full">
+      <div className="bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl rounded-tl-sm p-6 w-[85%] relative overflow-hidden group">
         
         {/* Answer Module */}
-        <p className="text-gray-900 mb-5 leading-relaxed text-[15px]">{message.answer}</p>
+        <p className="text-gray-200 mb-6 leading-relaxed text-[15px] font-light relative z-10">{message.answer}</p>
 
         {/* Diagnostic Badges */}
-        <HallucinationBadge warning={message.is_hallucinated ? message.warning : null} />
+        <div className="relative z-10">
+          <HallucinationBadge warning={message.is_hallucinated ? message.warning : null} />
+        </div>
         
-        {message.citations && <MultiDocConflict citations={message.citations} />}
+        {message.citations && (
+          <div className="relative z-10">
+            <MultiDocConflict citations={message.citations} />
+          </div>
+        )}
 
         {/* AI Trust Gauge */}
-        <div className="mb-4 bg-gray-50 p-3 rounded-lg border">
-          <div className="flex justify-between text-xs text-gray-500 mb-2 font-medium">
+        <div className="mb-4 bg-black/40 p-4 rounded-xl border border-white/5 relative z-10">
+          <div className="flex justify-between text-xs text-gray-400 mb-3 font-medium uppercase tracking-wider">
             <span>Cosine Relevance</span>
-            <span style={{ color: barColor }}>{confidencePct}% Trust Score</span>
+            <span style={{ color: barColor }} className="drop-shadow-md">{confidencePct}% Trust Score</span>
           </div>
-          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-700 ease-out`}
+              className={`h-full rounded-full transition-all duration-[1500ms] ease-out shadow-[0_0_10px_${barColor}]`}
               style={{ width: `${confidencePct}%`, background: barColor }}
             />
           </div>

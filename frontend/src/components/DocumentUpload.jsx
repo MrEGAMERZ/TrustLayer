@@ -42,14 +42,14 @@ export default function DocumentUpload({ onUploadSuccess }) {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10 shadow-sm flex items-center justify-between">
+    <div className="bg-white/5 backdrop-blur-xl border-b border-white/10 p-4 sticky top-0 z-10 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">🛡️ TrustLayer</h1>
-        <span className="text-xs font-semibold bg-gray-100 text-gray-500 px-2 py-1 rounded">Enterprise Core v1</span>
+        <h1 className="text-xl font-light text-white tracking-widest uppercase">🛡️ TrustLayer</h1>
+        <span className="text-[10px] font-mono bg-white/10 text-gray-400 px-2 py-1 rounded border border-white/5">Enterprise Core v1</span>
       </div>
       
       <div className="flex items-center gap-4">
-        {error && <span className="text-red-500 text-sm">{error}</span>}
+        {error && <span className="text-red-400 text-sm font-medium">{error}</span>}
         <div className="relative">
           <input
             type="file"
@@ -61,9 +61,9 @@ export default function DocumentUpload({ onUploadSuccess }) {
           <button 
             type="button" 
             disabled={uploading}
-            className={`px-4 py-2 bg-black text-white rounded-lg shadow font-medium text-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 ${uploading ? 'opacity-50 cursor-wait flex gap-2 items-center' : 'hover:bg-gray-800 hover:-translate-y-0.5'}`}
+            className={`px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-xl font-medium text-sm transition-all focus:ring-2 focus:ring-white/50 backdrop-blur-lg ${uploading ? 'opacity-50 cursor-wait flex gap-2 items-center' : 'hover:bg-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:-translate-y-0.5'}`}
           >
-            {uploading ? "Uploading..." : "Upload Document"}
+            {uploading ? "Ingesting Matrix..." : "Upload Context Node"}
           </button>
         </div>
       </div>
