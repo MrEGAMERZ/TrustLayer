@@ -69,7 +69,7 @@ export default function ChatWindow() {
           <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-4">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-sm text-center">
               <span className="text-4xl block mb-4">🏛️</span>
-              <h2 className="text-xl text-gray-800 font-semibold mb-2">Welcome to KnowledgeOS</h2>
+              <h2 className="text-xl text-gray-800 font-semibold mb-2">Welcome to TrustLayer</h2>
               <p className="text-sm">Please upload an enterprise document (PDF) at the top, and ask any contextual question below.</p>
             </div>
           </div>

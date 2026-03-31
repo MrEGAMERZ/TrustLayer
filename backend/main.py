@@ -7,7 +7,7 @@ from services.generation import generate_answer
 from services.hallucination import detect_hallucination
 import shutil, os
 
-app = FastAPI(title="KnowledgeOS API")
+app = FastAPI(title="TrustLayer API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,4 +60,4 @@ async def query_documents(request: QueryRequest):
 
 @app.get("/health")
 def health():
-    return {"status": "KnowledgeOS is running 🚀"}
+    return {"status": "TrustLayer is running 🚀"}
