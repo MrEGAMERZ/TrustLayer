@@ -25,8 +25,12 @@ async def upload_document(file: UploadFile = File(...)):
     save_path = f"data/uploads/{file.filename}"
     with open(save_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    result = ingest_pdf(save_path, file.filename)
-    return {"status": "success", "filename": file.filename, **result}
+    
+    try:
+        result = ingest_pdf(save_path, file.filename)
+        return {"status": "success", "filename": file.filename, **result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.post("/query")
 async def query_documents(request: QueryRequest):

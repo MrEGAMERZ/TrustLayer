@@ -9,11 +9,19 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def ingest_pdf(file_path: str, doc_name: str):
     # Step 1: Extract text with page numbers
-    doc = fitz.open(file_path)
+    try:
+        doc = fitz.open(file_path)
+    except Exception as e:
+        # Fallback or strict error message if format isn't supported by fitz
+        raise ValueError(f"Could not parse document '{doc_name}'. Ensure it's a valid PDF/TXT. Error: {str(e)}")
+
     chunks_with_meta = []
 
     for page_num, page in enumerate(doc):
         text = page.get_text()
+        if not text.strip():
+            continue
+            
         chunks_with_meta.append({
             "text": text,
             "page": page_num + 1,
@@ -36,9 +44,12 @@ def ingest_pdf(file_path: str, doc_name: str):
                 "doc": item["doc"]
             })
 
-    # Step 3: Embed all chunks
+    if not final_chunks:
+        return {"chunks_created": 0}
+
+    # Step 3: Embed all chunks in batches to handle 100+ page documents without blowing up RAM
     texts = [c["text"] for c in final_chunks]
-    embeddings = model.encode(texts, convert_to_numpy=True)
+    embeddings = model.encode(texts, convert_to_numpy=True, batch_size=32, show_progress_bar=False)
 
     # Step 4: Store in FAISS
     dim = embeddings.shape[1]
