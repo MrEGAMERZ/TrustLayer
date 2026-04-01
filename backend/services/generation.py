@@ -13,24 +13,29 @@ if api_key:
 llm = genai.GenerativeModel("gemini-1.5-flash")
 
 def generate_answer(query: str, chunks: list) -> str:
-    context = "\n\n".join([
-        f"[Source: {c['doc']}, Page {c['page']}]\n{c['text']}"
-        for c in chunks
-    ])
+    # Construct high-density context string with explicit indexing
+    context_blocks = []
+    for i, c in enumerate(chunks):
+        context_blocks.append(f"--- DATA NODE {i+1} [DOC: {c['doc']}, PAGE: {c['page']}] ---\n{c['text']}")
+    
+    context = "\n\n".join(context_blocks)
 
-    prompt = f"""You are an enterprise knowledge assistant.
+    # The 'Sentinel' Prompt: Deeply analytical, zero-hallucination constraint
+    prompt = f"""SYSTEM ROLE: You are the TrustLayer Unified Intelligence Sentinel. 
+Your core mission is to provide 100% mathematically grounded answers extracted exclusively from the DATA NODES provided below.
 
-Answer the user's question ONLY using the provided context below.
-If the answer is not in the context, say exactly:
-"I could not find this information in the uploaded documents."
-Always mention which document and page your answer comes from.
+INSTRUCTIONS:
+1. ABSOLUTE GROUNDING: If the query cannot be answered with 100% certainty using only the provided DATA NODES, state: "I could not find definitive information in the current enterprise context."
+2. CITATION PROTOCOL: Every factual claim must be immediately followed by its source in square brackets, e.g., "The quarterly revenue grew by 12% [Source: financial_report.pdf, Page 4]."
+3. CONFLICT RESOLUTION: If different DATA NODES provide conflicting information, highlight the discrepancy explicitly to the user.
+4. TONE: Professional, concise, and analytical. Avoid conversational fillers like "I am happy to help" or "According to the documents."
 
-CONTEXT:
+AVAILABLE ENTERPRISE CONTEXT (DATA NODES):
 {context}
 
-QUESTION: {query}
+USER QUERY: {query}
 
-ANSWER:"""
+TRUSTLAYER SENTINAL ANALYSIS & RESPONSE:"""
 
     response = llm.generate_content(prompt)
-    return response.text
+    return response.text.strip()

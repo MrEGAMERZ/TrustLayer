@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function Sidebar() {
+export default function Sidebar({ onLogoClick }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 

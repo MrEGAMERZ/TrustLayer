@@ -6,7 +6,7 @@ def detect_hallucination(answer: str, chunks: list) -> dict:
     score = compute_confidence(answer, chunks)
     
     # If answer contains the fallback string, don't flag as hallucination but keep score low
-    if "I could not find this information" in answer:
+    if "I could not find" in answer:
         return {
             "is_hallucinated": False,
             "confidence": 0.0,
