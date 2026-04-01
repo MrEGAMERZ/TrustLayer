@@ -1,4 +1,8 @@
+import { useState } from 'react';
+import ArchitectureModal from "./ArchitectureModal";
+
 export default function Dashboard({ onLaunchChat }) {
+  const [showArch, setShowArch] = useState(false);
   // Fake dashboard data to wow judges
   const stats = [
     { label: "Active Vectors", val: "42,019" },
@@ -10,6 +14,8 @@ export default function Dashboard({ onLaunchChat }) {
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center p-8 relative z-10 px-4 max-w-6xl mx-auto overflow-hidden">
       
+      <ArchitectureModal isOpen={showArch} onClose={() => setShowArch(false)} />
+
       {/* Background radial glow */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-500/[0.03] rounded-full blur-[120px] -z-10 mix-blend-screen pointer-events-none"></div>
       
@@ -19,12 +25,20 @@ export default function Dashboard({ onLaunchChat }) {
           <span className="text-xl opacity-60 flex gap-2 items-center mb-2">🛡️ <span className="uppercase tracking-[0.2em] text-sm">TrustLayer Core</span></span>
           <h2 className="text-4xl text-white font-light tracking-tight">System Telemetry.</h2>
         </div>
-        <button 
-          onClick={onLaunchChat}
-          className="flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-[0_4px_16px_rgba(255,255,255,0.1)] hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)] hover:-translate-y-1"
-        >
-          Initialize Copilot Session 🚀
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setShowArch(true)}
+            className="flex items-center justify-center gap-2 bg-transparent border border-white/20 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:bg-white/10 hover:border-white/40"
+          >
+            Examine Architecture 🛰️
+          </button>
+          <button 
+            onClick={onLaunchChat}
+            className="flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-[0_4px_16px_rgba(255,255,255,0.1)] hover:shadow-[0_8px_32px_rgba(255,255,255,0.2)] hover:-translate-y-1"
+          >
+            Initialize Copilot Session 🚀
+          </button>
+        </div>
       </div>
 
       {/* Grid of Stats */}

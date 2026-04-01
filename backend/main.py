@@ -44,11 +44,19 @@ async def query_documents(request: QueryRequest):
         # Calculate Trust/Hallucination
         trust = detect_hallucination(answer, chunks)
 
+        # Detect Cross-Doc Conflicts (Sentinel V2 feature)
+        conflict_detected = "[DATA_CONFLICT_DETECTED]" in answer
+        display_answer = answer.replace("[DATA_CONFLICT_DETECTED]", "").strip()
+
         return {
-            "answer": answer,
+            "answer": display_answer,
             "confidence": trust["confidence"],
             "is_hallucinated": trust["is_hallucinated"],
-            "warning": trust["warning"],
+            "is_conflict": conflict_detected,
+            "warning": (
+                "🚨 CRITICAL CONFLICT DETECTED between document versions!"
+                if conflict_detected else trust["warning"]
+            ),
             "citations": [
                 {
                     "doc": c["doc"],

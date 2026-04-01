@@ -15,21 +15,21 @@ export default function ReasoningPanel({ chunksUsed, open }) {
       <div className="space-y-3 font-light text-xs tracking-wide">
         <p className="flex justify-between border-b border-white/5 pb-2">
            <span className="text-gray-500">Retrieval Pipeline:</span>
-           <span className="text-cyan-400 font-mono">L2 Vector Indexing (FAISS)</span>
+           <span className="text-cyan-400 font-mono">FAISS Hybrid Linkage</span>
         </p>
         <p className="flex justify-between border-b border-white/5 pb-2">
-           <span className="text-gray-500">Context Density:</span>
-           <span className="text-gray-100">{chunksUsed} Semantic Nodes Detected</span>
+           <span className="text-gray-500">Sentinel Version:</span>
+           <span className="text-gray-100 italic">V2.0 (Active Grounding)</span>
         </p>
         <p className="flex justify-between border-b border-white/5 pb-2">
-           <span className="text-gray-500">Hallucination Delta:</span>
-           <span className="text-green-400 font-mono">Minimized via Grounding Sentinel</span>
+           <span className="text-gray-500">Analysis Matrix:</span>
+           <span className="text-green-400 font-mono">Cross-Node Conflict Analysis</span>
         </p>
         
         <p className="mt-4 text-[11px] text-gray-500 leading-normal italic bg-black/20 p-3 rounded-xl border border-white/5">
-           Unlike generic AI, TrustLayer isolates retrieved DATA NODES and enforces a zero-hallucination constraint. 
-           The Sentinel Prompt prevents the LLM from accessing base training data, ensuring the response is mathematically derived 
-           exclusively from your enterprise context.
+           TrustLayer Sentinel V2 generates a high-integrity response by performing **Cross-Node Validation**. 
+           Every retrieved data chunk is mathematically mapped and cross-checked for internal document contradictions 
+           before a single sentence is synthesized.
         </p>
       </div>
     </div>

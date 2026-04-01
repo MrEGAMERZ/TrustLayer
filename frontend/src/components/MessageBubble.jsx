@@ -45,7 +45,10 @@ export default function MessageBubble({ message }) {
 
         {/* Diagnostic Badges */}
         <div className="relative z-10">
-          <HallucinationBadge warning={message.is_hallucinated ? message.warning : null} />
+          <HallucinationBadge 
+            warning={message.is_hallucinated || message.is_conflict ? message.warning : null} 
+            isConflict={message.is_conflict}
+          />
         </div>
         
         {message.citations && (
