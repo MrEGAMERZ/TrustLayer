@@ -10,7 +10,7 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
     
-llm = genai.GenerativeModel("gemini-1.5-flash")
+llm = genai.GenerativeModel("gemini-2.0-flash")
 
 def generate_answer(query: str, chunks: list) -> str:
     # Construct high-density context string with explicit indexing

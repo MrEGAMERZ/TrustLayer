@@ -27,3 +27,4 @@ Thumbs.db
 # Any random test files
 backend/server.log
 backend/test.pdf
+test_data/

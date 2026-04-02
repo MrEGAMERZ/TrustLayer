@@ -55,6 +55,7 @@ export default function DocumentUpload({ onUploadSuccess }) {
             type="file"
             accept="application/pdf"
             onChange={handleFileChange}
+            data-testid="file-input"
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             disabled={uploading}
           />
