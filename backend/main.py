@@ -4,11 +4,17 @@ from pydantic import BaseModel
 import json
 from services.ingestion import ingest_pdf
 from services.retrieval import retrieve_chunks
-from services.generation import generate_answer
+from services.generation import generate_answer, generate_followups
 from services.hallucination import detect_hallucination
 import shutil, os
 
 app = FastAPI(title="TrustLayer API")
+
+@app.on_event("startup")
+def clear_data_on_startup():
+    if os.path.exists("data"):
+        shutil.rmtree("data")
+        print("Data directory cleared on startup to ensure fresh state.")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +25,8 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     question: str
+    history: list = []  # Added for conversation memory
+    strict_mode: bool = False
 
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
@@ -38,11 +46,29 @@ async def query_documents(request: QueryRequest):
     try:
         chunks = retrieve_chunks(request.question, top_k=5)
         
-        # Generate Answer
-        answer = generate_answer(request.question, chunks)
+        # Generate Answer with Memory
+        answer, outdated_warning = generate_answer(request.question, chunks, request.history)
         
         # Calculate Trust/Hallucination
         trust = detect_hallucination(answer, chunks)
+
+        STRICT_MODE_THRESHOLD = 0.80
+
+        if request.strict_mode and trust["confidence"] < STRICT_MODE_THRESHOLD:
+            return {
+                "answer": f"⛔ SENTINEL REFUSAL — Query blocked in Strict Mode. Confidence ({round(trust['confidence']*100)}%) is below the enterprise threshold of 80%. This answer has been withheld to prevent decisions based on uncertain information.",
+                "confidence": trust["confidence"],
+                "is_hallucinated": False,
+                "is_conflict": False,
+                "outdated_warning": None,
+                "warning": "Query refused by Strict Mode guardian.",
+                "citations": [],
+                "chunks_used": 0,
+                "strict_refused": True
+            }
+
+        # Generate Follow-up Questions
+        followups = generate_followups(request.question, answer)
 
         # Detect Cross-Doc Conflicts (Sentinel V2 feature)
         conflict_detected = "[DATA_CONFLICT_DETECTED]" in answer
@@ -53,6 +79,7 @@ async def query_documents(request: QueryRequest):
             "confidence": trust["confidence"],
             "is_hallucinated": trust["is_hallucinated"],
             "is_conflict": conflict_detected,
+            "outdated_warning": outdated_warning,
             "warning": (
                 "🚨 CRITICAL CONFLICT DETECTED between document versions!"
                 if conflict_detected else trust["warning"]
@@ -65,16 +92,20 @@ async def query_documents(request: QueryRequest):
                 }
                 for c in chunks[:3]
             ],
-            "chunks_used": len(chunks)
+            "chunks_used": len(chunks),
+            "followups": followups,
+            "strict_refused": False
         }
     except Exception as e:
         return {
             "answer": f"Backend Error: {str(e)}\n\n(Did you remember to add your real GEMINI_API_KEY in the backend/.env file?)",
             "confidence": 0,
             "is_hallucinated": True,
+            "is_conflict": False,
             "warning": "Critical failure processing vector embeddings or contacting LLM API.",
             "citations": [],
-            "chunks_used": 0
+            "chunks_used": 0,
+            "followups": []
         }
 
 @app.get("/documents")

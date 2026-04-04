@@ -16,3 +16,18 @@ export default function HallucinationBadge({ warning, isConflict }) {
     </div>
   );
 }
+
+export function OutdatedWarningBadge({ warning }) {
+  if (!warning) return null;
+  return (
+    <div className="bg-amber-500/10 border-l-4 border-amber-400 backdrop-blur-md rounded-r-2xl p-4 mb-4 shadow-xl flex items-start gap-4">
+      <span className="text-xl">🕐</span>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-mono uppercase tracking-[0.2em] font-bold text-amber-300">
+          Temporal Source Warning
+        </span>
+        <span className="text-sm text-amber-100 mt-1 font-light leading-tight">{warning}</span>
+      </div>
+    </div>
+  );
+}

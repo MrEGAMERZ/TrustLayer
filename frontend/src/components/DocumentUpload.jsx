@@ -4,14 +4,11 @@ import toast from "react-hot-toast";
 
 export default function DocumentUpload({ onUploadSuccess }) {
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const uploadFile = async (file) => {
     if (!file) return;
-
     setUploading(true);
-    setError(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -25,7 +22,7 @@ export default function DocumentUpload({ onUploadSuccess }) {
         }
       });
       if (resp.data.status === "success") {
-        toast.success(`✅ ${file.name} securely ingested and vectorized into the index!`);
+        toast.success(`✅ ${file.name} securely ingested!`);
         onUploadSuccess(file.name);
       } else {
         toast.error("Failed to parse file: " + resp.data.message);
@@ -33,41 +30,57 @@ export default function DocumentUpload({ onUploadSuccess }) {
     } catch (err) {
       console.error(err);
       toast.error("Network Error: Could not connect to TrustLayer backend");
-      setError("Failed to upload document.");
     } finally {
       setUploading(false);
-      // Reset input value to allow uploading the same file again if needed
-      e.target.value = null;
+    }
+  };
+
+  const handleFileChange = (e) => {
+    uploadFile(e.target.files[0]);
+    e.target.value = null;
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const onDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      uploadFile(e.dataTransfer.files[0]);
     }
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-xl border-b border-white/10 p-4 sticky top-0 z-10 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <h1 className="text-xl font-light text-white tracking-widest uppercase">🛡️ TrustLayer</h1>
-        <span className="text-[10px] font-mono bg-white/10 text-gray-400 px-2 py-1 rounded border border-white/5">Enterprise Core v1</span>
-      </div>
-      
-      <div className="flex items-center gap-4">
-        {error && <span className="text-red-400 text-sm font-medium">{error}</span>}
-        <div className="relative">
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={handleFileChange}
-            data-testid="file-input"
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            disabled={uploading}
-          />
-          <button 
-            type="button" 
-            disabled={uploading}
-            className={`px-5 py-2.5 bg-white/10 text-white border border-white/20 rounded-xl font-medium text-sm transition-all focus:ring-2 focus:ring-white/50 backdrop-blur-lg ${uploading ? 'opacity-50 cursor-wait flex gap-2 items-center' : 'hover:bg-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:-translate-y-0.5'}`}
-          >
-            {uploading ? "Ingesting Matrix..." : "Upload Context Node"}
-          </button>
-        </div>
-      </div>
+    <div 
+      className={`relative rounded-xl border hover:border-dashed transition-all flex items-center justify-center flex-shrink-0 min-h-[56px] w-[56px] ml-1 mb-1 ${isDragOver ? "border-cyan-500 bg-cyan-500/10 scale-105" : "border-white/10 bg-black/40 hover:border-cyan-500/40"}`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      title="Drag & Drop PDF here or Click to Upload"
+    >
+      <input
+        type="file"
+        accept="application/pdf"
+        onChange={handleFileChange}
+        data-testid="file-input"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        disabled={uploading}
+      />
+      {uploading ? (
+        <div className="w-5 h-5 border-2 border-t-cyan-500 border-white/20 rounded-full animate-spin"></div>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 transition-colors ${isDragOver ? 'text-cyan-400' : 'text-gray-500'}`}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      )}
     </div>
   );
 }

@@ -7,6 +7,35 @@ import json, os
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+def extract_document_date(text: str):
+    import re
+    from datetime import datetime
+    
+    patterns = [
+        (r'(?:Effective Date|Last Updated|Version Date|Date|Issued|Published)[:\s]+(\d{1,2}[\s/-]\w+[\s/-]\d{2,4})', None),
+        (r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+(\d{4})\b', None),
+        (r'\b(\d{4})[/-](\d{2})[/-](\d{2})\b', None),
+        (r'\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b', None),
+    ]
+    
+    sample = text[:3000]
+    
+    for pattern, _ in patterns:
+        match = re.search(pattern, sample, re.IGNORECASE)
+        if match:
+            raw = match.group(0)
+            for fmt in ["%B %d, %Y", "%B %d %Y", "%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y"]:
+                try:
+                    parts = re.findall(r'[\d]+', raw)
+                    if len(parts) >= 3:
+                        year = max(parts, key=lambda x: len(x))
+                        if len(year) == 4:
+                            return int(year)
+                except:
+                    pass
+    
+    return None
+
 def ingest_pdf(file_path: str, doc_name: str):
     # Step 1: Extract text with page numbers
     try:
@@ -14,6 +43,9 @@ def ingest_pdf(file_path: str, doc_name: str):
     except Exception as e:
         # Fallback or strict error message if format isn't supported by fitz
         raise ValueError(f"Could not parse document '{doc_name}'. Ensure it's a valid PDF/TXT. Error: {str(e)}")
+
+    full_text = " ".join([page.get_text() for page in doc])
+    doc_year = extract_document_date(full_text)
 
     chunks_with_meta = []
 
@@ -41,7 +73,8 @@ def ingest_pdf(file_path: str, doc_name: str):
             final_chunks.append({
                 "text": s,
                 "page": item["page"],
-                "doc": item["doc"]
+                "doc": item["doc"],
+                "year": doc_year
             })
 
     if not final_chunks:
