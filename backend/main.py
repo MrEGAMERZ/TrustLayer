@@ -120,9 +120,11 @@ def list_documents():
     docs = {}
     for c in chunks:
         doc_name = c["doc"]
-        docs[doc_name] = docs.get(doc_name, 0) + 1
+        if doc_name not in docs:
+            docs[doc_name] = {"chunks": 0, "year": c.get("year")}
+        docs[doc_name]["chunks"] += 1
         
-    return {"documents": [{"name": k, "chunks": v} for k, v in docs.items()]}
+    return {"documents": [{"name": k, "chunks": v["chunks"], "year": v["year"]} for k, v in docs.items()]}
 
 @app.get("/health")
 def health():

@@ -84,21 +84,41 @@ def ingest_pdf(file_path: str, doc_name: str):
     texts = [c["text"] for c in final_chunks]
     embeddings = model.encode(texts, convert_to_numpy=True, batch_size=32, show_progress_bar=False)
 
-    # Step 4: Store in FAISS
-    dim = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dim)
-    index.add(embeddings)
+    # Load existing index if present, otherwise create new
+    index_path = "data/faiss_index/index.faiss"
+    meta_path = "data/faiss_index/metadata.json"
 
-    # Step 5: Save index + metadata
+    existing_chunks = []
+    if os.path.exists(index_path) and os.path.exists(meta_path):
+        existing_index = faiss.read_index(index_path)
+        with open(meta_path, "r") as f:
+            existing_chunks = json.load(f)
+        
+        # Remove old entries for this same document (re-upload scenario)
+        existing_chunks = [c for c in existing_chunks if c["doc"] != doc_name]
+        
+        # Rebuild index without old doc
+        if existing_chunks:
+            existing_texts = [c["text"] for c in existing_chunks]
+            existing_embeddings = model.encode(existing_texts, convert_to_numpy=True, batch_size=32)
+            dim = existing_embeddings.shape[1]
+            merged_index = faiss.IndexFlatL2(dim)
+            merged_index.add(existing_embeddings)
+        else:
+            dim = embeddings.shape[1]
+            merged_index = faiss.IndexFlatL2(dim)
+        
+        merged_index.add(embeddings)
+        all_chunks = existing_chunks + final_chunks
+    else:
+        dim = embeddings.shape[1]
+        merged_index = faiss.IndexFlatL2(dim)
+        merged_index.add(embeddings)
+        all_chunks = final_chunks
+
     os.makedirs("data/faiss_index", exist_ok=True)
-    
-    # We will conditionally write to faiss index
-    # Note: if there's already an index, we should merge or load it, but for Day 1 
-    # we'll use the holy grail snippet which overwrites or adds depending on how we want it
-    # the Holy Grail snippet overwrites the index per file (for hackathon MVP).
-    # MVP approach from snippet:
-    faiss.write_index(index, "data/faiss_index/index.faiss")
-    with open("data/faiss_index/metadata.json", "w") as f:
-        json.dump(final_chunks, f)
+    faiss.write_index(merged_index, index_path)
+    with open(meta_path, "w") as f:
+        json.dump(all_chunks, f)
 
     return {"chunks_created": len(final_chunks)}

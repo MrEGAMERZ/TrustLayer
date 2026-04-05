@@ -1,29 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,200;0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,300&family=JetBrains+Mono:wght@300;400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design Tokens ─────────────────────────────────── */
 :root {
-  --glass-bg: rgba(255,255,255,0.04);
-  --glass-border: rgba(255,255,255,0.08);
-  --glass-blur: blur(24px);
-  --accent: #06b6d4;
-  --accent-glow: rgba(6,182,212,0.25);
+  --glass-bg:          rgba(255, 255, 255, 0.035);
+  --glass-border:      rgba(255, 255, 255, 0.07);
+  --glass-blur:        blur(28px);
+  --glass-strong-bg:   rgba(255, 255, 255, 0.065);
+  --glass-strong-blur: blur(40px);
+
+  --accent:            #22d3ee;       /* cyan-400 */
+  --accent-dim:        #0891b2;       /* cyan-600 */
+  --accent-glow:       rgba(34, 211, 238, 0.18);
+
+  --surface:           #080b14;
+  --surface-1:         #0d1120;
+  --surface-2:         #111827;
+  --text-primary:      #f0f4ff;
+  --text-secondary:    #8b9cb8;
+  --text-muted:        #3d4f6b;
+
+  --sidebar-w:         300px;
+  --header-h:          64px;
 }
 
-* { box-sizing: border-box; }
+/* ── Reset & Base ──────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
   height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #06080f;
-  color: #e2e8f0;
+  width: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--surface);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── Liquid Glass Utilities ──────────────────────── */
+/* ── Liquid Glass Utilities ──────────────────────────── */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -32,49 +49,166 @@ html, body, #root {
 }
 
 .glass-strong {
-  background: rgba(255,255,255,0.07);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: var(--glass-strong-bg);
+  backdrop-filter: var(--glass-strong-blur);
+  -webkit-backdrop-filter: var(--glass-strong-blur);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* liquid shimmer surface */
+.glass-liquid {
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.05) 0%,
+    rgba(255,255,255,0.02) 50%,
+    rgba(255,255,255,0.055) 100%
+  );
+  backdrop-filter: blur(32px) saturate(1.6);
+  -webkit-backdrop-filter: blur(32px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 0 0 0.5px rgba(255,255,255,0.04) inset,
+    0 24px 64px rgba(0,0,0,0.35),
+    0 1px 0 rgba(255,255,255,0.06) inset;
 }
 
 /* ── Custom Scrollbar ─────────────────────────────── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
-  border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar          { width: 3px; height: 3px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.08); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
 /* ── Animations ──────────────────────────────────── */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px var(--accent-glow); }
-  50%       { box-shadow: 0 0 28px var(--accent-glow); }
+  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
+  50%       { box-shadow: 0 0 24px var(--accent-glow), 0 0 48px var(--accent-glow); }
 }
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes scan-line {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(2%, 1.5%) scale(1.03); }
+  66%       { transform: translate(-1.5%, 2%) scale(0.98); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes bar-grow {
+  from { width: 0%; }
+}
+@keyframes number-tick {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+@keyframes ripple {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes float-badge {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-3px); }
 }
 
-.animate-fade-in { animation: fade-in 0.35s ease both; }
-.animate-glow    { animation: glow-pulse 3s ease-in-out infinite; }
+.animate-fade-in       { animation: fade-in       0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in-scale { animation: fade-in-scale 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-up      { animation: slide-up      0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-in-right{ animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-glow          { animation: glow-pulse     3s ease-in-out infinite; }
+.animate-orb-float     { animation: orb-float     12s ease-in-out infinite; }
+.animate-float-badge   { animation: float-badge    4s ease-in-out infinite; }
 
-/* ── Prose Markdown in AI responses ──────────────── */
-.prose-ai p    { margin-bottom: 0.75rem; line-height: 1.75; }
-.prose-ai ul   { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
-.prose-ai li   { margin-bottom: 0.25rem; }
-.prose-ai strong { color: #e2e8f0; font-weight: 600; }
+/* ── Shimmer text ───────────────────────────────── */
+.shimmer-text {
+  background: linear-gradient(90deg, var(--text-secondary) 0%, var(--text-primary) 30%, var(--accent) 50%, var(--text-primary) 70%, var(--text-secondary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Prose for AI Markdown ──────────────────────── */
+.prose-ai {
+  line-height: 1.8;
+  font-weight: 300;
+  color: rgba(240, 244, 255, 0.88);
+}
+.prose-ai p           { margin-bottom: 0.8rem; }
+.prose-ai ul          { list-style: none; padding-left: 0; margin-bottom: 0.8rem; }
+.prose-ai ul > li     { padding-left: 1.25rem; position: relative; margin-bottom: 0.3rem; }
+.prose-ai ul > li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  opacity: 0.5;
+  font-size: 0.7em;
+  top: 0.35em;
+}
+.prose-ai ol          { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.8rem; }
+.prose-ai li          { margin-bottom: 0.25rem; }
+.prose-ai strong      { color: var(--text-primary); font-weight: 500; }
+.prose-ai em          { color: var(--text-secondary); font-style: italic; }
 .prose-ai code {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8em;
-  background: rgba(6,182,212,0.1);
-  border: 1px solid rgba(6,182,212,0.2);
-  padding: 0.1em 0.3em;
+  font-size: 0.78em;
+  background: rgba(34, 211, 238, 0.07);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  padding: 0.15em 0.4em;
   border-radius: 4px;
+  color: #67e8f9;
+}
+.prose-ai h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ── Utility — no-scrollbar ────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Input reset ──────────────────────────────── */
+input, textarea, select {
+  font-family: inherit;
+  color: inherit;
+}
+select option { background: #0d1120; color: #f0f4ff; }
+
+/* ── Focus visible ──────────────────────────── */
+*:focus-visible {
+  outline: 1.5px solid rgba(34, 211, 238, 0.5);
+  outline-offset: 2px;
+}
+
+/* ── Selection ────────────────────────────── */
+::selection {
+  background: rgba(34, 211, 238, 0.2);
+  color: var(--text-primary);
 }
