@@ -2,13 +2,14 @@ import os
 import json
 from groq import Groq
 from dotenv import load_dotenv
+from services.intent_classifier import classify_intent
 
 # Load env variables if present
 load_dotenv()
 
 # Build client
 api_key = os.environ.get("GROQ_API_KEY")
-client = Groq(api_key=api_key) if api_key else None
+client = Groq(api_key=api_key, timeout=60.0) if api_key else None
 
 def detect_numeric_conflicts(chunks: list) -> str | None:
     import re
@@ -75,8 +76,10 @@ UNIVERSAL RULES (both modes):
 - Professional but human tone."""
 
 def generate_answer(query: str, chunks: list, history: list = []):
+    intent = classify_intent(query)
+
     if not client:
-        return "Backend Error: GROQ_API_KEY is missing! Did you forget to add it to .env?", None
+        return "Backend Error: GROQ_API_KEY is missing! Did you forget to add it to .env?", None, intent
         
     # Construct high-density context string with explicit indexing
     context_blocks = []
@@ -110,9 +113,14 @@ def generate_answer(query: str, chunks: list, history: list = []):
             history_text += f"{h['role'].upper()}: {h['content']}\n"
         history_text += "\n"
 
-    # The 'Sentinel 3.0' Prompt: Two-Mode Architecture
-    prompt = f"""{SYSTEM_PROMPT}
+    # Intent-specific formatting instruction
+    intent_instruction = f"""\nDETECTED QUERY INTENT: {intent['intent'].replace('_', ' ').upper()}
+Required response format: {intent['response_format']}
+Required tone: {intent['tone']}\n"""
 
+    # The 'Sentinel 3.0' Prompt: Two-Mode Architecture + Intent Layer
+    prompt = f"""{SYSTEM_PROMPT}
+{intent_instruction}
 AVAILABLE ENTERPRISE CONTEXT (DATA NODES):
 {context}
 {history_text}
@@ -129,9 +137,9 @@ SENTINEL RESPONSE:"""
         answer_text = response.choices[0].message.content.strip()
         if numeric_conflict and "[DATA_CONFLICT_DETECTED]" not in answer_text:
             answer_text = "[DATA_CONFLICT_DETECTED] " + answer_text
-        return answer_text, outdated_warning
+        return answer_text, outdated_warning, intent
     except Exception as e:
-        return f"Backend Error: {str(e)}", None
+        return f"Backend Error: {str(e)}", None, intent
 
 def generate_followups(query: str, answer: str) -> list:
     if not client:

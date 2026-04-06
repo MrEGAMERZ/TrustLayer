@@ -129,9 +129,11 @@ export default function MessageBubble({ message, onFollowup }) {
 
           {/* Answer body */}
           <div className="px-5 py-5">
-            <ReactMarkdown className="prose-ai text-[14px] whitespace-pre-wrap leading-relaxed max-w-none">
-              {message.answer}
-            </ReactMarkdown>
+            <div className="prose-ai text-[14px] whitespace-pre-wrap leading-relaxed max-w-none">
+              <ReactMarkdown>
+                {message.answer}
+              </ReactMarkdown>
+            </div>
           </div>
 
           {/* Diagnostic badges */}

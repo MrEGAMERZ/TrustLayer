@@ -6,6 +6,9 @@ from services.ingestion import ingest_pdf
 from services.retrieval import retrieve_chunks
 from services.generation import generate_answer, generate_followups
 from services.hallucination import detect_hallucination
+from services.knowledge_graph import build_fact_map
+from services.doc_trust import score_document
+from services.verification import verify_answer_claims
 import shutil, os
 
 app = FastAPI(title="TrustLayer API")
@@ -49,7 +52,7 @@ async def query_documents(request: QueryRequest):
         chunks = []
         
     try:
-        answer, outdated_warning = generate_answer(request.question, chunks, request.history)
+        answer, outdated_warning, intent_data = generate_answer(request.question, chunks, request.history)
         
         # Calculate Trust/Hallucination
         trust = detect_hallucination(answer, chunks)
@@ -66,7 +69,8 @@ async def query_documents(request: QueryRequest):
                 "warning": "Query refused by Strict Mode guardian.",
                 "citations": [],
                 "chunks_used": 0,
-                "strict_refused": True
+                "strict_refused": True,
+                "intent": intent_data
             }
 
         # Generate Follow-up Questions
@@ -75,6 +79,9 @@ async def query_documents(request: QueryRequest):
         # Detect Cross-Doc Conflicts (Sentinel V2 feature)
         conflict_detected = "[DATA_CONFLICT_DETECTED]" in answer
         display_answer = answer.replace("[DATA_CONFLICT_DETECTED]", "").strip()
+
+        # Claim-level verification
+        verification = verify_answer_claims(display_answer, chunks)
 
         return {
             "answer": display_answer,
@@ -96,7 +103,9 @@ async def query_documents(request: QueryRequest):
             ],
             "chunks_used": len(chunks),
             "followups": followups,
-            "strict_refused": False
+            "strict_refused": False,
+            "intent": intent_data,
+            "verification": verification
         }
     except Exception as e:
         return {
@@ -121,7 +130,7 @@ async def query_stream(request: QueryRequest):
         chunks = []
         
     try:
-        answer, outdated_warning = generate_answer(request.question, chunks, request.history)
+        answer, outdated_warning, intent_data = generate_answer(request.question, chunks, request.history)
         
         # Calculate Trust/Hallucination
         trust = detect_hallucination(answer, chunks)
@@ -139,6 +148,9 @@ async def query_stream(request: QueryRequest):
 
         followups = generate_followups(request.question, display_answer)
 
+        # Claim-level verification
+        verification = verify_answer_claims(display_answer, chunks)
+
         metadata = {
             "confidence": trust["confidence"],
             "is_hallucinated": trust["is_hallucinated"],
@@ -148,7 +160,9 @@ async def query_stream(request: QueryRequest):
             "citations": [{"doc": c["doc"], "page": c["page"], "excerpt": c["text"][:250] + "..."} for c in chunks[:3]],
             "chunks_used": len(chunks),
             "followups": followups,
-            "strict_refused": getattr(request, "strict_mode", False) and trust.get("confidence", 1) < STRICT_MODE_THRESHOLD
+            "strict_refused": getattr(request, "strict_mode", False) and trust.get("confidence", 1) < STRICT_MODE_THRESHOLD,
+            "intent": intent_data,
+            "verification": verification
         }
         
         async def generate():
@@ -178,15 +192,36 @@ def list_documents():
     
     with open(data_path, "r") as f:
         chunks = json.load(f)
-        
+
     docs = {}
     for c in chunks:
-        doc_name = c["doc"]
-        if doc_name not in docs:
-            docs[doc_name] = {"chunks": 0, "year": c.get("year")}
-        docs[doc_name]["chunks"] += 1
-        
-    return {"documents": [{"name": k, "chunks": v["chunks"], "year": v["year"]} for k, v in docs.items()]}
+        if c["doc"] not in docs:
+            docs[c["doc"]] = {"chunks": 0, "year": c.get("year")}
+        docs[c["doc"]]["chunks"] += 1
+
+    result = []
+    for name in docs:
+        trust = score_document(name, chunks)
+        result.append({
+            "name": name,
+            "chunks": docs[name]["chunks"],
+            "year": docs[name]["year"],
+            "trust_score": trust["total_score"],
+            "trust_grade": trust["grade"],
+            "trust_breakdown": trust["breakdown"],
+            "recommendation": trust["recommendation"]
+        })
+
+    return {"documents": result}
+
+@app.get("/knowledge-graph")
+def knowledge_graph():
+    data_path = "data/faiss_index/metadata.json"
+    if not os.path.exists(data_path):
+        return {"conflicts": [], "conflict_count": 0}
+    with open(data_path) as f:
+        chunks = json.load(f)
+    return build_fact_map(chunks)
 
 @app.get("/health")
 def health():
