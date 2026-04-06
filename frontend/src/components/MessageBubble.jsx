@@ -3,9 +3,10 @@ import CitationCard from "./CitationCard";
 import ReasoningPanel from "./ReasoningPanel";
 import MultiDocConflict from "./MultiDocConflict";
 import HallucinationBadge, { OutdatedWarningBadge } from "./HallucinationBadge";
+import ChartArtifact from "./ChartArtifact";
+import MarkdownRenderer from "./MarkdownRenderer";
 import jsPDF from "jspdf";
 import toast from "react-hot-toast";
-import ReactMarkdown from "react-markdown";
 
 export default function MessageBubble({ message, onFollowup }) {
 
@@ -95,7 +96,7 @@ export default function MessageBubble({ message, onFollowup }) {
 
   return (
     <div className="flex justify-start w-full animate-fade-in">
-      <div className="w-[90%] md:w-[85%] relative group">
+      <div className="w-full relative group">
 
         {/* Main card */}
         <div className="glass-liquid border border-white/[0.07] rounded-2xl rounded-tl-sm overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] hover:border-white/12 transition-all duration-300">
@@ -129,12 +130,17 @@ export default function MessageBubble({ message, onFollowup }) {
 
           {/* Answer body */}
           <div className="px-5 py-5">
-            <div className="prose-ai text-[14px] whitespace-pre-wrap leading-relaxed max-w-none">
-              <ReactMarkdown>
-                {message.answer}
-              </ReactMarkdown>
+            <div className="prose-ai text-[14px] leading-relaxed max-w-none text-gray-200">
+              <MarkdownRenderer>{message.answer}</MarkdownRenderer>
             </div>
           </div>
+
+          {/* ── Chart Artifact (inline, like Claude) ── */}
+          {message.chart_data && (
+            <div className="px-5 pb-2">
+              <ChartArtifact chartData={message.chart_data} />
+            </div>
+          )}
 
           {/* Diagnostic badges */}
           {(message.is_hallucinated || message.is_conflict || message.outdated_warning) && (

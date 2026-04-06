@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import ConflictMap from "./ConflictMap";
 
 // DOCS removed, fetched via API
 
@@ -199,11 +200,12 @@ export default function RightSidebar({ sessions, activeId, onSelectSession, onNe
               { id: 'sessions', label: 'History', icon: '💬' },
               { id: 'docs',     label: 'Vault',   icon: '📁' },
               { id: 'stats',    label: 'Stats',   icon: '📊' },
+              { id: 'conflicts',label: 'Conflicts',icon: '⚡' },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-2.5 text-[10px] font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2.5 text-[9px] font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
                   activeTab === tab.id
                     ? 'text-cyan-400 border-b-2 border-cyan-400 -mb-px bg-cyan-500/5'
                     : 'text-gray-600 hover:text-gray-300'
@@ -250,31 +252,62 @@ export default function RightSidebar({ sessions, activeId, onSelectSession, onNe
                   <span className="text-[10px] text-gray-500 uppercase tracking-wider">Document Vault</span>
                   <button onClick={handleClearDocs} className="text-[9px] text-red-500/60 hover:text-red-400 transition-colors font-mono uppercase tracking-wider">Clear all</button>
                 </div>
-                {docs.map((doc, i) => (
-                  <div key={i} className="glass-liquid rounded-xl p-3 space-y-2 hover:border-white/10 transition-all">
-                    <div className="flex items-start gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0 text-xs">📄</div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] text-gray-300 font-medium truncate">{doc.name}</p>
-                        <p className="text-[10px] text-gray-600 font-mono mt-0.5">· {doc.chunks} chunks</p>
+                {docs.map((doc, i) => {
+                  const grade = doc.trust_grade;
+                  const gradeColor = grade === 'A' ? '#4ade80' : grade === 'B' ? '#22d3ee' : grade === 'C' ? '#f59e0b' : grade === 'D' ? '#fb923c' : '#ef4444';
+                  return (
+                    <div key={i} className="glass-liquid rounded-xl p-3 space-y-2 hover:border-white/10 transition-all">
+                      <div className="flex items-start gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0 text-xs">📄</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-gray-300 font-medium truncate">{doc.name}</p>
+                          <p className="text-[10px] text-gray-600 font-mono mt-0.5">· {doc.chunks} chunks</p>
+                        </div>
+                        {grade && (
+                          <div
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-bold flex-shrink-0 border"
+                            style={{ color: gradeColor, borderColor: gradeColor + '40', background: gradeColor + '15', boxShadow: `0 0 8px ${gradeColor}30` }}
+                            title={doc.recommendation}
+                          >
+                            {grade}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">✓ OK</span>
+                      {/* Trust score bar */}
+                      {doc.trust_score != null && (
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[9px]">
+                            <span className="text-gray-600 font-mono">Trust Score</span>
+                            <span className="font-mono" style={{ color: gradeColor }}>{doc.trust_score}/100</span>
+                          </div>
+                          <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${doc.trust_score}%`, background: gradeColor, boxShadow: `0 0 6px ${gradeColor}60` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {doc.year && (
+                        <div className="flex items-center gap-1.5 px-0.5">
+                          <span className="text-[9px] text-amber-400/60 font-mono">📅 {doc.year}</span>
+                        </div>
+                      )}
+                      {doc.recommendation && (
+                        <p className="text-[9px] text-gray-600 italic px-0.5">{doc.recommendation}</p>
+                      )}
                     </div>
-                    {doc.year && (
-                      <div className="flex items-center gap-1.5 px-1">
-                        <span className="text-[9px] text-amber-400/60 font-mono">📅 Year: {doc.year}</span>
-                        <span className="text-[9px] text-gray-700">·</span>
-                        <span className="text-[9px] text-gray-600 font-mono">FAISS indexed</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
                 <div className="glass rounded-xl p-3 border-dashed border border-white/[0.06] flex items-center justify-center gap-2 hover:border-cyan-500/20 transition-colors cursor-pointer">
                   <span className="text-gray-600 text-xs">+</span>
                   <span className="text-[11px] text-gray-600 font-light">Drop PDF to ingest</span>
                 </div>
               </div>
             )}
+
+            {/* CONFLICTS TAB */}
+            {activeTab === 'conflicts' && <ConflictMap />}
 
             {/* STATS TAB */}
             {activeTab === 'stats' && (

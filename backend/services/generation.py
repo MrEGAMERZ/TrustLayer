@@ -3,6 +3,7 @@ import json
 from groq import Groq
 from dotenv import load_dotenv
 from services.intent_classifier import classify_intent
+from services.reasoning import decompose_query
 
 # Load env variables if present
 load_dotenv()
@@ -77,9 +78,11 @@ UNIVERSAL RULES (both modes):
 
 def generate_answer(query: str, chunks: list, history: list = []):
     intent = classify_intent(query)
+    sub_questions = decompose_query(query)
+    is_decomposed = len(sub_questions) > 1
 
     if not client:
-        return "Backend Error: GROQ_API_KEY is missing! Did you forget to add it to .env?", None, intent
+        return "Backend Error: GROQ_API_KEY is missing! Did you forget to add it to .env?", None, intent, sub_questions, is_decomposed
         
     # Construct high-density context string with explicit indexing
     context_blocks = []
@@ -118,9 +121,19 @@ def generate_answer(query: str, chunks: list, history: list = []):
 Required response format: {intent['response_format']}
 Required tone: {intent['tone']}\n"""
 
-    # The 'Sentinel 3.0' Prompt: Two-Mode Architecture + Intent Layer
+    # Multi-step reasoning note (injected when query was decomposed)
+    if is_decomposed:
+        reasoning_note = (
+            f"\nNOTE: This question was decomposed into {len(sub_questions)} sub-questions: "
+            + ", ".join(f'"{q}"' for q in sub_questions)
+            + ". Answer each part clearly, then synthesize into one complete response.\n"
+        )
+    else:
+        reasoning_note = ""
+
+    # The 'Sentinel 3.0' Prompt: Two-Mode Architecture + Intent Layer + Multi-Step Reasoning
     prompt = f"""{SYSTEM_PROMPT}
-{intent_instruction}
+{intent_instruction}{reasoning_note}
 AVAILABLE ENTERPRISE CONTEXT (DATA NODES):
 {context}
 {history_text}
@@ -132,14 +145,15 @@ SENTINEL RESPONSE:"""
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile",
-            temperature=0.2
+            temperature=0.2,
+            max_tokens=4096
         )
         answer_text = response.choices[0].message.content.strip()
         if numeric_conflict and "[DATA_CONFLICT_DETECTED]" not in answer_text:
             answer_text = "[DATA_CONFLICT_DETECTED] " + answer_text
-        return answer_text, outdated_warning, intent
+        return answer_text, outdated_warning, intent, sub_questions, is_decomposed
     except Exception as e:
-        return f"Backend Error: {str(e)}", None, intent
+        return f"Backend Error: {str(e)}", None, intent, sub_questions, is_decomposed
 
 def generate_followups(query: str, answer: str) -> list:
     if not client:

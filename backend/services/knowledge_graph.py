@@ -13,17 +13,24 @@ def build_fact_map(chunks: list) -> dict:
         re.IGNORECASE
     )
 
+    def clean_subject(s: str) -> str:
+        # Remove common "noise" words to improve matching
+        noise = ["the", "standard", "annual", "set", "at", "for", "now", "been", "is", "of", "to", "now", "are", "shall", "be", "must"]
+        words = [w for w in s.split() if w not in noise and len(w) > 2]
+        return " ".join(words)
+
     doc_facts = defaultdict(list)
 
     for chunk in chunks:
         matches = fact_pattern.findall(chunk["text"])
         for subject, value, unit in matches:
-            subject = subject.strip().lower()
-            if len(subject) > 3:
+            subj_clean = clean_subject(subject.strip().lower())
+            if len(subj_clean) > 2:
                 doc_facts[chunk["doc"]].append({
-                    "subject": subject,
+                    "subject": subj_clean,
+                    "original_subject": subject.strip(),
                     "value": float(value),
-                    "unit": unit.strip(),
+                    "unit": unit.strip().lower(),
                     "page": chunk["page"],
                     "doc": chunk["doc"],
                     "year": chunk.get("year")
@@ -40,12 +47,20 @@ def build_fact_map(chunks: list) -> dict:
 
             for fa in facts_a:
                 for fb in facts_b:
-                    # Same subject, different value
-                    if (fa["subject"] == fb["subject"] and
-                            fa["value"] != fb["value"] and
+                    # Fuzzy match: Subject word overlap
+                    # If they share at least 2 key words (or 1 if it's the only word), they match
+                    words_a = set(fa["subject"].split())
+                    words_b = set(fb["subject"].split())
+                    common = words_a.intersection(words_b)
+                    
+                    if (len(common) >= min(2, len(words_a), len(words_b)) and 
+                            fa["value"] != fb["value"] and 
                             fa["unit"] == fb["unit"]):
+                        
                         conflicts.append({
-                            "subject": fa["subject"],
+                            "subject": " ".join(sorted(common)), # Show common keywords as subject
+                            "original_a": fa["original_subject"],
+                            "original_b": fb["original_subject"],
                             "doc_a": docs[i],
                             "value_a": fa["value"],
                             "unit_a": fa["unit"],

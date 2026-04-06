@@ -9,6 +9,7 @@ from services.hallucination import detect_hallucination
 from services.knowledge_graph import build_fact_map
 from services.doc_trust import score_document
 from services.verification import verify_answer_claims
+from services.chart_builder import extract_chart_data
 import shutil, os
 
 app = FastAPI(title="TrustLayer API")
@@ -44,15 +45,33 @@ async def upload_document(file: UploadFile = File(...)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+COMPARISON_KEYWORDS = ["compare", "difference", "vs", "versus", "differ", "contrast",
+                       "both", "which is better", "how do they", "what changed",
+                       "old vs", "new vs", "company a", "company b"]
+
+def is_comparison_query(q: str) -> bool:
+    ql = q.lower()
+    return any(kw in ql for kw in COMPARISON_KEYWORDS)
+
 @app.post("/query")
 async def query_documents(request: QueryRequest):
     try:
-        chunks = retrieve_chunks(request.question, top_k=3)
+        chunks = retrieve_chunks(request.question, top_k=8)
     except Exception:
         chunks = []
-        
+
+    # Load ALL chunks for chart building (need full doc coverage)
+    all_chunks = []
     try:
-        answer, outdated_warning, intent_data = generate_answer(request.question, chunks, request.history)
+        data_path = "data/faiss_index/metadata.json"
+        if os.path.exists(data_path):
+            with open(data_path) as f:
+                all_chunks = json.load(f)
+    except Exception:
+        all_chunks = chunks
+
+    try:
+        answer, outdated_warning, intent_data, sub_questions, is_decomposed = generate_answer(request.question, chunks, request.history)
         
         # Calculate Trust/Hallucination
         trust = detect_hallucination(answer, chunks)
@@ -70,18 +89,24 @@ async def query_documents(request: QueryRequest):
                 "citations": [],
                 "chunks_used": 0,
                 "strict_refused": True,
-                "intent": intent_data
+                "intent": intent_data,
+                "chart_data": None
             }
 
         # Generate Follow-up Questions
         followups = generate_followups(request.question, answer)
 
-        # Detect Cross-Doc Conflicts (Sentinel V2 feature)
+        # Detect Cross-Doc Conflicts
         conflict_detected = "[DATA_CONFLICT_DETECTED]" in answer
         display_answer = answer.replace("[DATA_CONFLICT_DETECTED]", "").strip()
 
         # Claim-level verification
         verification = verify_answer_claims(display_answer, chunks)
+
+        # Chart artifact — generate when comparison query OR conflict detected
+        chart_data = None
+        if is_comparison_query(request.question) or conflict_detected:
+            chart_data = extract_chart_data(all_chunks, display_answer)
 
         return {
             "answer": display_answer,
@@ -94,29 +119,29 @@ async def query_documents(request: QueryRequest):
                 if conflict_detected else trust["warning"]
             ),
             "citations": [
-                {
-                    "doc": c["doc"],
-                    "page": c["page"],
-                    "excerpt": c["text"][:250] + "..."
-                }
+                {"doc": c["doc"], "page": c["page"], "excerpt": c["text"][:250] + "..."}
                 for c in chunks[:3]
             ],
             "chunks_used": len(chunks),
             "followups": followups,
             "strict_refused": False,
             "intent": intent_data,
-            "verification": verification
+            "verification": verification,
+            "reasoning_steps": sub_questions if is_decomposed else None,
+            "was_decomposed": is_decomposed,
+            "chart_data": chart_data
         }
     except Exception as e:
         return {
-            "answer": f"Backend Error: {str(e)}\n\n(Did you remember to add your real GEMINI_API_KEY in the backend/.env file?)",
+            "answer": f"Backend Error: {str(e)}",
             "confidence": 0,
             "is_hallucinated": True,
             "is_conflict": False,
-            "warning": "Critical failure processing vector embeddings or contacting LLM API.",
+            "warning": "Critical failure.",
             "citations": [],
             "chunks_used": 0,
-            "followups": []
+            "followups": [],
+            "chart_data": None
         }
 
 from fastapi.responses import StreamingResponse
@@ -125,12 +150,12 @@ import asyncio
 @app.post("/query/stream")
 async def query_stream(request: QueryRequest):
     try:
-        chunks = retrieve_chunks(request.question, top_k=3)
+        chunks = retrieve_chunks(request.question, top_k=8)
     except Exception:
         chunks = []
         
     try:
-        answer, outdated_warning, intent_data = generate_answer(request.question, chunks, request.history)
+        answer, outdated_warning, intent_data, sub_questions, is_decomposed = generate_answer(request.question, chunks, request.history)
         
         # Calculate Trust/Hallucination
         trust = detect_hallucination(answer, chunks)
@@ -151,6 +176,18 @@ async def query_stream(request: QueryRequest):
         # Claim-level verification
         verification = verify_answer_claims(display_answer, chunks)
 
+        # Chart artifact for stream
+        chart_data = None
+        if is_comparison_query(request.question) or conflict_detected:
+            try:
+                data_path = "data/faiss_index/metadata.json"
+                if os.path.exists(data_path):
+                    with open(data_path) as f:
+                        all_chunks = json.load(f)
+                    chart_data = extract_chart_data(all_chunks, display_answer)
+            except Exception:
+                pass
+
         metadata = {
             "confidence": trust["confidence"],
             "is_hallucinated": trust["is_hallucinated"],
@@ -162,7 +199,10 @@ async def query_stream(request: QueryRequest):
             "followups": followups,
             "strict_refused": getattr(request, "strict_mode", False) and trust.get("confidence", 1) < STRICT_MODE_THRESHOLD,
             "intent": intent_data,
-            "verification": verification
+            "verification": verification,
+            "reasoning_steps": sub_questions if is_decomposed else None,
+            "was_decomposed": is_decomposed,
+            "chart_data": chart_data
         }
         
         async def generate():
